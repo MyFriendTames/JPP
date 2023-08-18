@@ -1,9 +1,9 @@
 #include "../include/JPP.hpp"
 
-#include <iostream>
 #include "JPP Exceptions.hpp"
 
-size_t jpp::JSON::parseString( char* p_buffer, const std::function< char() >& p_next ){
+jpp::JSON::Value jpp::JSON::parseString( char* p_buffer, const std::function< char() >& p_next ) const {
+  jpp::JSON::Value result;
   size_t charactersRead = 0;
   char c;
   bool scape = false;
@@ -49,7 +49,15 @@ size_t jpp::JSON::parseString( char* p_buffer, const std::function< char() >& p_
       scape = false;
     }
   }
-  p_buffer[ charactersRead ] = '\0';
-  std::cout << "String: \"" << p_buffer << "\"" << " # " << charactersRead << std::endl;
-  return charactersRead;
+  result.type = jpp::Type::String;
+  result.strValue.str = new char [ charactersRead + 1 ];
+  std::memcpy( result.strValue.str, p_buffer, charactersRead );
+  result.strValue.str[ charactersRead ] = '\0';
+  result.strValue.length = charactersRead;
+  return result;
+}
+
+jpp::JSON::Value jpp::JSON::parseNumber( char p_c, const std::functional< char() >& p_next ) const {
+  jpp::JSON::Value result;
+  return result;
 }
