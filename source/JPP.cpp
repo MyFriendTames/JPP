@@ -1,7 +1,7 @@
 #include "../include/JPP.hpp"
 
 #include <iostream>
-#include "./JPP Exceptions.hpp"
+#include "JPP Exceptions.hpp"
 
 size_t jpp::JSON::parseString( char* p_buffer, const std::function< char() >& p_next ){
   size_t charactersRead = 0;
@@ -17,11 +17,15 @@ size_t jpp::JSON::parseString( char* p_buffer, const std::function< char() >& p_
       else if ( c >= 'A' && c <= 'F' ) hexValue = hexValue * 16 + 10 + ( c - 'A');
       else throw jpp::MalformedHexValue();
       if ( !--hex ){
+        // UTF-8 Encoding
         if ( hexValue <= 0x7F ) p_buffer[ charactersRead++ ] = static_cast< char >( hexValue );
         else if ( hexValue <= 0x7FF ){
-
-        }else{// hexValue <= 0xFFFF
-
+          p_buffer[ charactersRead++ ] = static_cast< char >( 0b11000000 | ( hexValue >> 6 ) );
+          p_buffer[ charactersRead++ ] = static_cast< char >( 0b10000000 | ( 0b00111111 & hexValue ) );
+        }else{ // hexValue <= 0xFFFF
+          p_buffer[ charactersRead++ ] = static_cast< char >( 0b11100000 | ( hexValue >> 12 ) );
+          p_buffer[ charactersRead++ ] = static_cast< char >( 0b10000000 | ( 0b00111111 & ( hexValue >> 6 ) ) );
+          p_buffer[ charactersRead++ ] = static_cast< char >( 0b10000000 | ( 0b00111111 & hexValue ) );
         }
         scape = false;
       }
