@@ -57,7 +57,37 @@ jpp::JSON::Value jpp::JSON::parseString( char* p_buffer, const std::function< ch
   return result;
 }
 
-jpp::JSON::Value jpp::JSON::parseNumber( char p_c, const std::functional< char() >& p_next ) const {
-  jpp::JSON::Value result;
+jpp::JSON::ParseResult jpp::JSON::parseNumber( char p_c, const std::function< char() >& p_next ) const {
+  jpp::JSON::ParseResult result;
+  bool negative = p_c == '-';
+  size_t intPart = 0;
+  float floatPart = 0;
+  size_t decimalPoint = 0;
+  do{
+    if ( p_c >= '0' && p_c <= '9' ){
+      if ( decimalPoint ){
+        floatPart = floatPart * 10 + ( p_c - '0' );
+        ++decimalPoint;
+      }else intPart = intPart * 10 + ( p_c - '0' );
+    }else if ( p_c == '.' && !decimalPoint ) decimalPoint = 1;
+    else throw UnexpectedToken();
+    p_c = p_next();
+  }while ( p_c != '\0' && p_c != ',' && p_c != ' ' && p_c != '\n' && p_c != '\r' );
+  // Finding the end
+  do{
+    if ( p_c == '\0' ) result.ending = jpp::JSON::ParseResult::Ending::EndOfFile;
+    else if ( p_c == '}' ) result.ending = jpp::JSON::ParseResult::Ending::EndOfObject;
+    else if ( p_c == ']' ) result.ending = jpp::JSON::ParseResult::Ending::EndOfList;
+    else if ( p_c == ',' ) result.ending = jpp::JSON::ParseResult::Ending::EndOfValue;
+    else if ( p_c != ' ' && p_c != '\n' && p_c != '\r' ) throw UnexpectedToken();
+    else p_c = p_next();
+  }while ( result.ending == ParseResult::Ending::Null );
+  if ( decimalPoint ){
+    result.value.type = jpp::Type::Float;
+    result.value.floatValue = ( negative ? -1 : 1 ) * ( intPart + ( floatPart / std::pow( 10, decimalPoint - 1 ) ) );
+  }else{
+    result.value.type = jpp::Type::Integer;
+    result.value.intValue = ( negative ? -1 : 1 ) * intPart;
+  }
   return result;
 }

@@ -1,5 +1,5 @@
-#ifndef JPP_EXCEPTIONS_HPP
-#define JPP_EXCEPTIONS_HPP
+#ifndef ___JPP_JSON_EXCEPTIONS_HPP___
+#define ___JPP_JSON_EXCEPTIONS_HPP___
 
 #include <exception>
 
